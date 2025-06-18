@@ -8,17 +8,17 @@ cols <- data.frame(colnames(NWFSC_catch_hooknline_view))
 
 hook_line <- dplyr::select(
   NWFSC_catch_hooknline_view,
-  `site_dim$tide_station_name`,
   `site_dim$site_number`,
   operation_type,
-  site_whid,
   set_identifier,
   scientific_name,
   common_name,
   datetime_utc_iso,
   cpue_normalized_catch_numbers,
   taxon_rank,
-  best_available_taxonomy_whid,
+  `site_dim$site_latitude_dd`,
+  `site_dim$site_longitude_dd`,
+  ctd_on_bottom_measure_depth_m
   )
 
 sci <- data.frame(scientific_name = unique(NWFSC_catch_hooknline_view$scientific_name))
