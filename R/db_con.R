@@ -7,7 +7,7 @@ connectToDB <- function() {
   tryCatch({
     con <- dbConnect(
       Postgres(),
-      dbname = "Trawl survey",
+      dbname = "surveyjoin",
       host = "localhost",
       port = 5432,
       user = "postgres",
@@ -25,4 +25,17 @@ connectToDB <- function() {
 con <- connectToDB()
 if (is.null(con)) {
   stop("Database connection failed.")
+}
+
+checkTables <- function(con) {
+  tables <- dbListTables(con)
+  required_tables <- c("survey", "haul", "species", "catch")
+
+  if (all(required_tables %in% tolower(tables))) {
+    message("All required tables exist!")
+    return(TRUE)
+  } else {
+    message("Missing tables detected.")
+    return(FALSE)
+  }
 }
