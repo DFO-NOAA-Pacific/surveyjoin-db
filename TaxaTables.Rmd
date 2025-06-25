@@ -45,6 +45,12 @@ You can also embed plots, for example:
 
 ```{r pressure, echo=FALSE}
 
+#Remove rows with bad things
+bad_things<-c(" egg")
+for(i in 1:length(bad_things)){
+species_table<-species_table[- grep(bad_things[i], species_table$raw_species),]
+species_table<-species_table[- grep(bad_things[i], species_table$raw_common),]
+}
 
 #Remove bad words
 bad_words<-c(" sp\\."," spp\\.", " \\(juvenile\\)"," \\(adult\\)"," larva")
@@ -53,10 +59,10 @@ for(i in 1:length(bad_words)){
 species_table$raw_species<-str_remove(species_table$raw_species,pattern=bad_words[i])
 }
 
-
+#First pass for best matches
 for(i in 1:length(species_table$aphiaID)){
-  if(is.na(species_table$aphiaID[i])==FALSE){next}
-  a1<-wm_name2id_(species_table$raw_species[i])
+  if(is.na(species_table$aphiaID[i])==FALSE&species_table$aphiaID[i]!=-999&species_table$aphiaID[i]!="Not found"){next}
+  a1<-taxize::get_wormsid(species_table$raw_species[i])
   if(length(a1)==0){
   species_table$aphiaID[i]<-NA  
     next}
@@ -65,6 +71,66 @@ print(a1)
 print(i)
 }
 
+#Second pass using taxize (cleans up some with multiple matches)
+for(i in 1:length(species_table$aphiaID)){
+  if(is.na(species_table$aphiaID[i])==FALSE&species_table$aphiaID[i]!=-999&species_table$aphiaID[i]!="Not found"){next}
+  a1<-taxize::get_wormsid(species_table$raw_species[i],ask=TRUE)
+  if(length(a1)==0){
+  species_table$aphiaID[i]<-NA  
+    next}
+species_table$aphiaID[i]<-unlist(a1)
+print(a1)
+print(i)
+}
+
+#Third pass matching first word (assumed to be genus)
+for(i in 1:length(species_table$aphiaID)){
+  if(is.na(species_table$aphiaID[i])==FALSE&species_table$aphiaID[i]!=-999&species_table$aphiaID[i]!="Not found"){next}
+  print(species_table$raw_species[i])
+  t1<-strsplit(species_table$raw_species[i]," ")[[1]][1]
+  if(is.na(t1)){next}
+  a1<-taxize::get_wormsid(t1,ask=TRUE)
+  if(length(a1)==0){
+  species_table$aphiaID[i]<-NA  
+    next}
+species_table$aphiaID[i]<-unlist(a1)
+print(a1)
+print(i)
+}
+
+#Forth pass with fuzzy matching on common name
+for(i in 1:length(species_table$aphiaID)){
+  if(is.na(species_table$aphiaID[i])==FALSE&species_table$aphiaID[i]!=-999&species_table$aphiaID[i]!="Not found"){next}
+  print(species_table$raw_common[i])
+  a1<-taxize::get_wormsid(species_table$raw_common[i],ask=TRUE,searchtype="common")
+                                 
+  if(length(a1)==0){
+  species_table$aphiaID[i]<-NA  
+    next}
+species_table$aphiaID[i]<-unlist(a1)
+print(a1)
+print(i)
+}
+
+#Fifth pass with fuzzy matching on first 8 characters of species name
+for(i in 1:length(species_table$aphiaID)){
+  if(is.na(species_table$aphiaID[i])==FALSE&species_table$aphiaID[i]!=-999&species_table$aphiaID[i]!="Not found"){next}
+  print(species_table$raw_species[i])
+  a1<-taxize::get_wormsid(substr(species_table$raw_species[i],start=1,stop=8),ask=TRUE,fuzzy=TRUE)
+    if(length(a1)==0){
+  species_table$aphiaID[i]<-NA  
+    next}
+species_table$aphiaID[i]<-unlist(a1)
+print(a1)
+print(i)
+}
+
+#Fix known knowns
+species_table$aphiaID[(is.na(species_table$aphiaID)|species_table$aphiaID==-999|species_table$aphiaID=="Not found")&str_detect(tolower(species_table$raw_species),"rockfish")]<-taxize::get_wormsid("sebastes",ask=TRUE,fuzzy=TRUE)
+
+species_table$aphiaID[(is.na(species_table$aphiaID)|species_table$aphiaID==-999|species_table$aphiaID=="Not found")&str_detect(tolower(species_table$raw_species),"claypipe")]<-taxize::get_wormsid("hexactinellidae",ask=TRUE,fuzzy=TRUE)
+
+species_table$aphiaID[(is.na(species_table$aphiaID)|species_table$aphiaID==-999|species_table$aphiaID=="Not found")&str_detect(tolower(species_table$raw_species),"sponge")]<-taxize::get_wormsid("demospongiae",ask=TRUE,fuzzy=TRUE)
 
 
 subset(species_table,is.na(species_table$aphiaID))
@@ -78,122 +144,6 @@ subset(species_table,(is.na(species_table$aphiaID)|species_table$aphiaID==-999|s
 subset(species_table,(is.na(species_table$aphiaID)|species_table$aphiaID==-999|species_table$aphiaID=="Not found")&species_table$ssid=="ak")
 subset(species_table,(is.na(species_table$aphiaID)|species_table$aphiaID==-999|species_table$aphiaID=="Not found")&species_table$ssid=="wc")
 
-#REPLACE "NOT FOUNDS"
-
-for(i in 1:length(species_table$aphiaID2)){
-if(species_table$aphiaID2[i]=="Not found"|is.na(species_table$aphiaID2[i])){
-  a1<-wm_name2id_(species_table$raw_species[i])
-  if(length(a1)==0){
-  species_table$aphiaID2[i]<-NA  
-    next}
-species_table$aphiaID2[i]<-unlist(a1)
-print(a1)
-}}
-
-
-
 write.csv(species_table,"MasterSpeciesTableWithAphiaID.csv",row.names=FALSE)
 ```
 
-####IGNORE BLEOW HERE
-
-
-```{r add columns}
-
-
-SpeciesList$Class<-NA
-SpeciesList$Order<-NA
-SpeciesList$Family<-NA
-
-#Use the libraries
-library(jsonlite) #https://cran.r-project.org/web/packages/jsonlite/
-library(httr)
-
-
-
-
-#Fill in the AphiaID you need
-for(i in 1:length(SpeciesList$SpeciesName)){
-AphiaID <- SpeciesList$AphiaID[i]
-if(is.na(AphiaID)){next}
-
-#Build the URL to get the data from
-url <- sprintf("https://www.marinespecies.org/rest/AphiaClassificationByAphiaID/%d", AphiaID)
-
-#Get the actual data from the URL
-classificationTree <- fromJSON(url)
-
-currentTreeItem = classificationTree
-while(!is.null(currentTreeItem)){
-	print(sprintf("ID: %d, RANK: %s, ScientificName: %s",
-		currentTreeItem$AphiaID,
-		currentTreeItem$rank,
-		currentTreeItem$scientificname
-			))
-
-   if(currentTreeItem$rank=="Class"){SpeciesList$Class[i]<-currentTreeItem$scientificname}
-   if(currentTreeItem$rank=="Order"){SpeciesList$Order[i]<-currentTreeItem$scientificname}
-  if(currentTreeItem$rank=="Family"){SpeciesList$Family[i]<-currentTreeItem$scientificname}
-
-	#Get next item in the tree
-	currentTreeItem <- currentTreeItem$child
-}
-}
-
-SpeciesList<-data.frame(RawName=SpeciesList$RawName,SpeciesName=SpeciesList$SpeciesName,ScientificName=SpeciesList$ScientificName_accepted,AphiaID=SpeciesList$AphiaID,Family=SpeciesList$Family,Order=SpeciesList$Order,Class=SpeciesList$Class,TaxaGroup=SpeciesList$Taxa_group)
-
-write.csv(SpeciesList,"SpeciesListFinal.csv",row.names=FALSE)
-
-```
-
-To add new names as they come up
-
-```{r addnew}
-library(worrms)
-library(stringr)
-new_names<-outs
-new_names<-data.frame(RawName=new_names,SpeciesName=new_names)
-
-#Remove bad words
-bad_words<-c(" sp"," dead"," \\(GOA form\\)"," \\(squid/octopus unid"," upright")
-
-for(i in 1:length(bad_words)){
-new_names$SpeciesName<-str_remove(new_names$SpeciesName,pattern=bad_words[i])
-}
-
-#new_names$SpeciesName[new_names$SpeciesName=="Decapodiformes (squid/octopus unid"]<-"Decapodiformes"
-new_names$SpeciesName[new_names$SpeciesName=="crab unid"]<-"Decapoda"
-new_names$SpeciesName[new_names$SpeciesName=="Coral"]<-"Gorgonacea"
-
-
-new_names$ScientificName<-NA
-new_names$AphiaID<-NA
-new_names$Family<-NA
-new_names$Order<-NA
-new_names$Class<-NA
-new_names$TaxaGroup<-NA
-
-for(i in 1:length(new_names$SpeciesName)){
-  a1<-wm_name2id_(new_names$SpeciesName[i])
-  if(length(a1)==0){
-  new_names$ScientificName[i]<-NA
-  new_names$AphiaID[i]<-NA  
-    next}
-new_names$ScientificName[i]<-names(a1)
-new_names$AphiaID[i]<-unlist(a1)
-if(new_names$SpeciesName[i]=="Coryphaenoides"){new_names$AphiaID[i]<-125748}
-if(new_names$SpeciesName[i]=="Lepidopsetta"){new_names$AphiaID[i]<-269638}
-
-a1<-wm_classification(as.numeric(new_names$AphiaID[i]))
-ifelse("Family"%in%a1$rank,new_names$Family[i]<-a1$scientificname[a1$rank=="Family"],new_names$Family[i]<-NA)
-ifelse("Order"%in%a1$rank,new_names$Order[i]<-a1$scientificname[a1$rank=="Order"],new_names$Order[i]<-NA)
-ifelse("Class"%in%a1$rank,new_names$Class[i]<-a1$scientificname[a1$rank=="Class"],new_names$Class[i]<-NA)
-print(a1)
-  
-}
-
-write.csv(new_names,"new_names.csv",row.names=FALSE)
-
-```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
