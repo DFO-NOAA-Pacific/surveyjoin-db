@@ -3,19 +3,19 @@ library(dplyr)
 library(nwfscSurvey)
 
 haul_nwfsc_combo <- nwfscSurvey::pull_haul(survey = "NWFSC.Combo")
-haul_nwfsc_combo$survey_name <- "NWFSC Combo"
+haul_nwfsc_combo$survey_id <- "NWFSC Combo"
 
 haul_nwfsc_slope <- nwfscSurvey::pull_haul(survey = "NWFSC.Slope")
-haul_nwfsc_slope$survey_name <- "NWFSC Slope"
+haul_nwfsc_slope$survey_id <- "NWFSC Slope"
 
 haul_nwfsc_shelf <- nwfscSurvey::pull_haul(survey = "NWFSC.Shelf")
-haul_nwfsc_shelf$survey_name <- "NWFSC Shelf"
+haul_nwfsc_shelf$survey_id <- "NWFSC Shelf"
 
 haul_nwfsc_hypox <- nwfscSurvey::pull_haul(survey = "NWFSC.Hypoxia")
-haul_nwfsc_hypox$survey_name <- "NWFSC Hypoxia"
+haul_nwfsc_hypox$survey_id <- "NWFSC Hypoxia"
 
 haul_nwfsc_tri <- nwfscSurvey::pull_haul(survey = "Triennial")
-haul_nwfsc_tri$survey_name <- "AFSC NWFSC Triennial"
+haul_nwfsc_tri$survey_id <- "AFSC NWFSC Triennial"
 
 haul <- rbind(
   haul_nwfsc_combo,
@@ -41,10 +41,11 @@ haul <- dplyr::rename(haul,
 haul$effort <- haul$effort / 100  # Changed from hectare(ha)
 haul$effort_units <- "km2"
 haul$date <- as.POSIXct.Date(nwfsc_haul$date)
+haul$stratum <- NA
 
 nwfsc_haul <- dplyr::select(
   haul,
-  survey_name,
+  survey_id,
   event_id,
   date,
   pass,
@@ -58,6 +59,7 @@ nwfsc_haul <- dplyr::select(
   effort_units,
   performance,
   bottom_temp_c,
+  stratum
 )
 
 saveRDS(nwfsc_haul, "data/nwfsc_haul.rds")
