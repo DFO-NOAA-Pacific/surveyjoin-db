@@ -203,6 +203,12 @@ dim(subset(species_table,species_table$aphiaID=="Not found"))
 subset(species_table,species_table$aphiaID==-999)
 dim(subset(species_table,species_table$aphiaID==-999))
 
+species_table$TSN<-NA
+for(i in 1:length(species_table$species_code)){
+    if(is.na(species_table$aphiaID[i])==TRUE){next}
+tryCatch({species_table$TSN[i]<-wm_external(as.numeric(species_table$aphiaID[i]),type="tsn")}, error=function(e){cat("Error","\n")})
+}
+
 write.csv(species_table,"MasterSpeciesTableWithAphiaID.csv",row.names=FALSE)
 ```
 
