@@ -53,10 +53,14 @@ species_table<-species_table[- grep(bad_things[i], species_table$raw_common),]
 }
 
 #Remove bad words
-bad_words<-c(" sp\\."," spp\\.", " \\(juvenile\\)"," \\(adult\\)"," larva")
+bad_words<-c(" sp\\."," spp\\.", " \\(juvenile\\)"," \\(adult\\)"," larva", " unid\\.", " unident\\.")
 
 for(i in 1:length(bad_words)){
 species_table$raw_species<-str_remove(species_table$raw_species,pattern=bad_words[i])
+}
+
+for(i in 1:length(bad_words)){
+species_table$raw_common<-str_remove(species_table$raw_common,pattern=bad_words[i])
 }
 
 #First pass for best matches
@@ -125,12 +129,71 @@ print(a1)
 print(i)
 }
 
+species_table$raw_common[c(11231,11382)]<-NA
+
 #Fix known knowns
 species_table$aphiaID[(is.na(species_table$aphiaID)|species_table$aphiaID==-999|species_table$aphiaID=="Not found")&str_detect(tolower(species_table$raw_species),"rockfish")]<-taxize::get_wormsid("sebastes",ask=TRUE,fuzzy=TRUE)
+species_table$aphiaID[(is.na(species_table$aphiaID)|species_table$aphiaID==-999|species_table$aphiaID=="Not found")&str_detect(tolower(species_table$raw_common),"rockfish")]<-taxize::get_wormsid("sebastes",ask=TRUE,fuzzy=TRUE)
 
 species_table$aphiaID[(is.na(species_table$aphiaID)|species_table$aphiaID==-999|species_table$aphiaID=="Not found")&str_detect(tolower(species_table$raw_species),"claypipe")]<-taxize::get_wormsid("hexactinellidae",ask=TRUE,fuzzy=TRUE)
+species_table$aphiaID[(is.na(species_table$aphiaID)|species_table$aphiaID==-999|species_table$aphiaID=="Not found")&str_detect(tolower(species_table$raw_common),"claypipe")]<-taxize::get_wormsid("hexactinellidae",ask=TRUE,fuzzy=TRUE)
 
 species_table$aphiaID[(is.na(species_table$aphiaID)|species_table$aphiaID==-999|species_table$aphiaID=="Not found")&str_detect(tolower(species_table$raw_species),"sponge")]<-taxize::get_wormsid("demospongiae",ask=TRUE,fuzzy=TRUE)
+species_table$aphiaID[(is.na(species_table$aphiaID)|species_table$aphiaID==-999|species_table$aphiaID=="Not found")&str_detect(tolower(species_table$raw_common),"sponge")]<-taxize::get_wormsid("demospongiae",ask=TRUE,fuzzy=TRUE)
+
+species_table$aphiaID[(is.na(species_table$aphiaID)|species_table$aphiaID==-999|species_table$aphiaID=="Not found")&str_detect(tolower(species_table$raw_species),"anemone")]<-taxize::get_wormsid("actiniaria",ask=TRUE,fuzzy=TRUE)
+species_table$aphiaID[(is.na(species_table$aphiaID)|species_table$aphiaID==-999|species_table$aphiaID=="Not found")&str_detect(tolower(species_table$raw_common),"anemone")]<-taxize::get_wormsid("actiniaria",ask=TRUE,fuzzy=TRUE)
+
+#Manual clean up of the rest
+subset(species_table,(is.na(species_table$aphiaID)|species_table$aphiaID==-999|species_table$aphiaID=="Not found")&species_table$ssid=="bc")
+subset(species_table,(is.na(species_table$aphiaID)|species_table$aphiaID==-999|species_table$aphiaID=="Not found")&species_table$ssid=="ak")
+subset(species_table,(is.na(species_table$aphiaID)|species_table$aphiaID==-999|species_table$aphiaID=="Not found")&species_table$ssid=="wc")
+
+
+t1<-subset(species_table,(is.na(species_table$aphiaID)|species_table$aphiaID==-999|species_table$aphiaID=="Not found")&species_table$ssid=="ak")
+write.csv(t1,"ak_cray.csv",row.names=FALSE)
+#apply manual fix to AK table
+t1<-read.csv("ak_cray.csv",header=TRUE)
+
+for(i in 1:length(t1$aphiaID)){
+  if(is.na(t1$aphiaID[i])==FALSE&t1$aphiaID[i]!=-999&t1$aphiaID[i]!="Not found"){next}
+  a1<-taxize::get_wormsid(t1$raw_species[i])
+  if(length(a1)==0){
+  t1$aphiaID[i]<-NA  
+    next}
+t1$aphiaID[i]<-unlist(a1)
+print(a1)
+print(i)
+}
+
+for(i in 1:length(t1$species_code)){
+ species_table$aphiaID[species_table$species_code==t1$species_code[i]] <- t1$aphiaID[i]
+  }
+
+t1<-subset(species_table,(is.na(species_table$aphiaID)|species_table$aphiaID==-999|species_table$aphiaID=="Not found")&species_table$ssid=="wc")
+write.csv(t1,"wc_cray.csv",row.names=FALSE)
+#apply manual fix to WC table
+t1<-read.csv("wc_cray.csv",header=TRUE)
+
+for(i in 1:length(t1$aphiaID)){
+  if(is.na(t1$aphiaID[i])==FALSE&t1$aphiaID[i]!=-999&t1$aphiaID[i]!="Not found"){next}
+  a1<-taxize::get_wormsid(t1$raw_species[i])
+  if(length(a1)==0){
+  t1$aphiaID[i]<-NA  
+    next}
+t1$aphiaID[i]<-unlist(a1)
+print(a1)
+print(i)
+}
+
+for(i in 1:length(t1$species_code)){
+ species_table$aphiaID[species_table$species_code==t1$species_code[i]] <- t1$aphiaID[i]
+  }
+
+
+subset(species_table,(is.na(species_table$aphiaID)|species_table$aphiaID==-999|species_table$aphiaID=="Not found")&species_table$ssid=="bc")
+subset(species_table,(is.na(species_table$aphiaID)|species_table$aphiaID==-999|species_table$aphiaID=="Not found")&species_table$ssid=="ak")
+subset(species_table,(is.na(species_table$aphiaID)|species_table$aphiaID==-999|species_table$aphiaID=="Not found")&species_table$ssid=="wc")
 
 
 subset(species_table,is.na(species_table$aphiaID))
@@ -139,10 +202,6 @@ subset(species_table,species_table$aphiaID=="Not found")
 dim(subset(species_table,species_table$aphiaID=="Not found"))
 subset(species_table,species_table$aphiaID==-999)
 dim(subset(species_table,species_table$aphiaID==-999))
-
-subset(species_table,(is.na(species_table$aphiaID)|species_table$aphiaID==-999|species_table$aphiaID=="Not found")&species_table$ssid=="bc")
-subset(species_table,(is.na(species_table$aphiaID)|species_table$aphiaID==-999|species_table$aphiaID=="Not found")&species_table$ssid=="ak")
-subset(species_table,(is.na(species_table$aphiaID)|species_table$aphiaID==-999|species_table$aphiaID=="Not found")&species_table$ssid=="wc")
 
 write.csv(species_table,"MasterSpeciesTableWithAphiaID.csv",row.names=FALSE)
 ```
