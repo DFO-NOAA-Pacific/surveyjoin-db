@@ -1,17 +1,15 @@
 library(DBI)
 library(RPostgres)
 
-db_password <- Sys.getenv("DB_PASSWORD")
-
 connectToDB <- function() {
   tryCatch({
     con <- dbConnect(
       Postgres(),
-      dbname = "surveyjoin",
-      host = "localhost",
+      dbname = Sys.getenv("DB_NAME"),
+      host = Sys.getenv("DB_HOST"),
       port = 5432,
-      user = "postgres",
-      password = db_password
+      user = Sys.getenv("DB_USER"),
+      password = Sys.getenv("DB_PASSWORD"),
     )
     message("Successfully connected to the database!")
     return(con)
