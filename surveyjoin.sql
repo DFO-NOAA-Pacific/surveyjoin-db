@@ -3,7 +3,7 @@ CREATE TABLE SURVEY (
     survey_name TEXT NOT NULL,
     region TEXT NOT NULL,
     start_date DATE NOT NULL,
-    end_date DATE
+    latest_date DATE
 );
 
 CREATE TABLE SPECIES (

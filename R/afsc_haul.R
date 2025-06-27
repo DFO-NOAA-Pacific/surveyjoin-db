@@ -8,20 +8,20 @@ for (i in seq(0, 500000, 10000)){
   # query the API link
   res <- httr::GET(url = paste0('https://apps-st.fisheries.noaa.gov/ods/foss/afsc_groundfish_survey_haul/',
                                 "?offset=",i,"&limit=10000"))
-  
+
   if (httr::status_code(res) != 200) {
     warning("Request failed at offset ", i)
     break
   }
-  
+
   # convert from JSON format
   data <- jsonlite::fromJSON(base::rawToChar(res$content))
-  
+
   # if there are no data, stop the loop
   if (is.null(nrow(data$items))) {
     break
   }
-  
+
   # bind sub-pull to dat data.frame
   dat <- dplyr::bind_rows(dat,
                           data$items %>%
@@ -30,7 +30,7 @@ for (i in seq(0, 500000, 10000)){
 
 afsc_haul <- dat %>%
   dplyr::select(
-    survey_name = srvy,
+    survey_id = srvy,
     event_id = hauljoin,
     date = date_time,
     vessel = vessel_name,
@@ -45,14 +45,14 @@ afsc_haul <- dat %>%
     bottom_temp_c = bottom_temperature_c
   ) %>%
   dplyr::mutate(
-    survey_name = paste0("AFSC ", survey_name),
+    survey_id = paste0("AFSC ", survey_id),
     date = as.POSIXct(date, format = "%Y-%m-%d", tz = Sys.timezone()),
     pass = NA_integer_,
     effort = area_swept_km2,
     effort_units = "km2"
   )%>%
   dplyr::select(
-    survey_name,
+    survey_id,
     event_id,
     date,
     pass,
