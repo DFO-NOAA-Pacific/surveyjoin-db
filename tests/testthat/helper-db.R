@@ -1,6 +1,7 @@
 library(DBI)
 library(RPostgres)
 library(withr)
+readRenviron(".Renviron")
 
 # connect to db
 con <- dbConnect(
@@ -9,7 +10,7 @@ con <- dbConnect(
   host = Sys.getenv("DB_HOST"),
   user = Sys.getenv("DB_USER"),
   password = Sys.getenv("DB_PASSWORD"),
-  port = 5432
+  port = Sys.getenv("DB_PORT")
 )
 
 # disconnect after tests
