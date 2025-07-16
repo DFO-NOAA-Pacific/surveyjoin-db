@@ -10,7 +10,7 @@ This guide walks you through setting up the `surveyjoin` PostgreSQL database loc
 
 ---
 
-## 1. Install PostgreSQL
+### 1. Install PostgreSQL
 
 > During installation, you will be asked to set a PostgreSQL superuser password. Make sure to remember this, as you'll need it in your `.Renviron` file. This password is for the `postgres` user by default.
 
@@ -44,7 +44,7 @@ sudo systemctl start postgresql
 \q
  ```
 
-## 2. Configure Environment Variables
+### 2. Configure Environment Variables
 
 In the **root** of your `surveyjoin-db` repo, create an environment file named `.Renviron` with these entries:
 
@@ -57,12 +57,12 @@ DB_PASSWORD=your_password
 ```
 
 To verify that R can access these environment variables, open an R or RStudio session in the surveyjoin-db directory and run:
-> ```r
-> readRenviron('.Renviron')
-> Sys.getenv(c('DB_NAME','DB_HOST','DB_USER','DB_PASSWORD'))
-> ```
+ ```r
+ readRenviron('.Renviron')
+ Sys.getenv(c('DB_NAME','DB_HOST','DB_USER','DB_PASSWORD'))
+ ```
 
-## 3. Run the Setup Script in R
+### 3. Run the Setup Script in R
 
 Open R or RStudio in the `surveyjoin-db` directory and execute:
 
@@ -79,7 +79,7 @@ The script will:
 5. Load data from `.rds` files under `data/`.
 6. Create indexes on relevant columns.
 
-## 4. Verify the Setup
+### 4. Verify the Setup
 
 Using psql (command line):
 
@@ -107,7 +107,7 @@ Using pgAdmin (GUI):
 
 4. Right-click on any table and select "View/Edit Data" -> "All Rows" to see the loaded data, or open a Query Tool (click the SQL icon in the toolbar) and run the SELECT COUNT(*) queries listed above.
 
-## 5. Run Tests (Optional)
+### 5. Run Tests (Optional)
 
 After setting up the database and loading data, you can run the included `testthat` tests to ensure everything is working as expected.
 
