@@ -12,7 +12,7 @@ This guide walks you through setting up the `surveyjoin` PostgreSQL database loc
 
 ### 1. Install PostgreSQL
 
-> During installation, you will be asked to set a PostgreSQL superuser password. Make sure to remember this, as you'll need it in your `.Renviron` file. This password is for the `postgres` user by default.
+> During installation, you may be asked to set a PostgreSQL superuser password. Make sure to remember this, as you'll need it in your `.Renviron` file. This password is for the PostgreSQL superuser by default.
 
 **Windows**
 
@@ -25,6 +25,16 @@ This guide walks you through setting up the `surveyjoin` PostgreSQL database loc
 brew install postgresql
 brew services start postgresql
 ```
+
+**Alternative macOS Installation (Postgres.app)**
+
+1. Go to: [https://postgresapp.com/](https://postgresapp.com/)
+
+2. Download and install the .dmg for your macOS version.
+
+3. After installation, launch Postgres.app once so it sets up everything.
+
+> Note: With Postgres.app, the default PostgreSQL username is your macOS username, and the password is NULL by default. You can leave DB_PASSWORD blank in your .Renviron file if using this method and not setting a password.
 
 **Ubuntu/Debian Linux**
 
@@ -55,6 +65,17 @@ DB_PORT=5432              # Standard PostgreSQL port
 DB_USER=postgres          # Or your Postgres username if you created one
 DB_PASSWORD=your_password 
 ```
+> Note: The .Renviron file should not contain comments (#). Remove any comments before saving the file.
+
+To create and edit this project-specific `.Renviron` file conveniently, you can use the `usethis` package within R or RStudio. Ensure you are in the surveyjoin-db project directory, then run:
+
+```r
+# If not already installed
+# install.packages("usethis")
+usethis::edit_r_environ(scope = "project")
+```
+
+This command will open the `.Renviron` located at the root of your `surveyjoin-db` project, allowing you to add the variables above. Save and close the file after adding the entries.
 
 To verify that R can access these environment variables, open an R or RStudio session in the surveyjoin-db directory and run:
  ```r
