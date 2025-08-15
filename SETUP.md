@@ -88,7 +88,7 @@ To verify that R can access these environment variables, open an R or RStudio se
 Open R or RStudio in the `surveyjoin-db` directory and execute:
 
 ```r
-source('R/db_con.R')
+source('R/setup.R')
 ```
 
 The script will:
@@ -98,7 +98,8 @@ The script will:
 3. Connect to that database.
 4. Create tables (`survey`, `species`, `haul`, `catch`) if missing.
 5. Load data from `.rds` files under `data/`.
-6. Create indexes on relevant columns.
+6. Create a zero-filled view of the database.
+7. Create indexes on relevant columns.
 
 ### 4. Verify the Setup
 

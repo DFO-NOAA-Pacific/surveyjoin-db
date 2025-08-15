@@ -6,9 +6,9 @@ library(here)
 test_that("Row counts match local data frames", {
 
   survey_local <- readRDS(here("data", "survey.rds"))
-  species_local <- readRDS(here("data", "species.rds"))
+  species_local <- readRDS(here("data", "species_all.rds"))
   haul_local    <- readRDS(here("data", "haul_data.rds"))
-  catch_local   <- readRDS(here("data", "catch_data.rds"))
+  catch_local   <- readRDS(here("data", "catch_all.rds"))
 
   survey_db <- dbGetQuery(con, "SELECT COUNT(*) AS n FROM survey")$n
   species_db <- dbGetQuery(con, "SELECT COUNT(*) AS n FROM species")$n
@@ -23,14 +23,16 @@ test_that("Row counts match local data frames", {
 
 test_that("Species table matches local data", {
 
-  species_local <- readRDS(here("data", "species.rds"))
-  species_local <- as.data.frame(species_local[, c("species_id", "itis", "common_name", "scientific_name")])
+  species_local <- readRDS(here("data", "species_all.rds")) %>%
+    select(species_id, itis, scientific_name) %>%
+    as_tibble()
 
-  species_db <- dbReadTable(con, "species")
+  species_db <- dbGetQuery(con, "SELECT species_id, itis, scientific_name FROM species") %>%
+    as_tibble()
 
   expect_equal(
-    species_local[order(species_local$species_id), ],
-    species_db[order(species_db$species_id), ]
+    species_local %>% arrange(species_id),
+    species_db %>% arrange(species_id)
   )
 })
 
@@ -54,7 +56,7 @@ test_that("All catches reference valid hauls and species", {
 
 test_that("Total catch weight per survey matches local summary", {
 
-  catch_local <- readRDS(here("data", "catch_data.rds")) %>%
+  catch_local <- readRDS(here("data", "catch_all.rds")) %>%
     group_by(survey_id) %>%
     summarise(total_weight = sum(catch_weight, na.rm = TRUE)) %>%
     arrange(survey_id)
