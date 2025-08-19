@@ -123,19 +123,6 @@ for (sql in create_tables) {
   dbExecute(con, sql)
 }
 
-checkTables <- function(con) {
-  tables <- dbListTables(con)
-  required_tables <- c("survey", "haul", "species", "catch")
-
-  if (all(required_tables %in% tolower(tables))) {
-    message("All required tables exist!")
-    return(TRUE)
-  } else {
-    message("Missing tables detected.")
-    return(FALSE)
-  }
-}
-
 # Insert species data
 species <- readRDS("data/species_all.rds")
 species <- as.data.frame(species[, c("species_id", "itis", "common_name", "scientific_name")])
@@ -162,9 +149,9 @@ catch <- as.data.frame(catch[, c("survey_id", "event_id", "species_id", "catch_n
 dbWriteTable(con, "catch", catch, append = TRUE, row.names = FALSE)
 message(paste("Inserted", nrow(catch), "rows into 'catch' table."))
 
-# Create the catch_full view
-view_sql <- "
-CREATE OR REPLACE VIEW catch_full AS
+# Create views
+v1 <- "
+CREATE OR REPLACE VIEW vw_catch_full AS
 SELECT
   h.*,
   sv.survey_name,
@@ -188,8 +175,33 @@ LEFT JOIN
   ON h.survey_id = sv.survey_id;
 "
 
-dbExecute(con, view_sql)
-message("Created view 'catch_full'.")
+dbExecute(con, v1)
+message("Created view 'vw_catch_full'.")
+
+v2 <- "
+CREATE OR REPLACE VIEW vw_catch_positive AS
+SELECT
+  h.*,
+  sv.survey_name,
+  sv.region,
+  c.catch_numbers,
+  c.catch_weight,
+  s.species_id,
+  s.itis,
+  s.common_name,
+  s.scientific_name
+FROM
+  haul h
+INNER JOIN
+  catch c ON h.event_id = c.event_id AND h.survey_id = c.survey_id
+INNER JOIN
+  species s ON c.species_id = s.species_id
+INNER JOIN
+  survey sv ON h.survey_id = sv.survey_id;
+"
+
+dbExecute(con, v2)
+message("Created view 'vw_catch_positive'.")
 
 # Create indexes after data insert
 indexes <- c(

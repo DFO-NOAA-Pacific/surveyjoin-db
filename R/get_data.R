@@ -1,4 +1,4 @@
-# Function to query the `catch_full` view from the database.
+# Function to query the two views from the database.
 # Usage:
 #   1. First, load this script:
 #        source('R/get_data.R')
@@ -14,7 +14,8 @@
 #   - survey_id
 #   - date
 #   - year
-#   - fuzzy_match
+#   - fuzzy_match (default FALSE, set TRUE for substring search on scientific and common names)
+#   - zeroes (default TRUE, to include zeroes. Set FALSE to get only positive catches)
 
 if (!require("DBI", quietly = TRUE)) install.packages("DBI")
 if (!require("RPostgres", quietly = TRUE)) install.packages("RPostgres")
@@ -43,7 +44,6 @@ connectToDB <- function() {
   })
 }
 
-# Function to query the catch_full view
 get_data <- function(
     con = NULL,
     common_name = NULL,
@@ -54,7 +54,8 @@ get_data <- function(
     survey_id = NULL,
     date = NULL,
     year = NULL,
-    fuzzy_match = FALSE
+    fuzzy_match = FALSE,
+    zeroes = TRUE
 ) {
   # Manage database connection
   local_con_created <- FALSE
@@ -73,8 +74,9 @@ get_data <- function(
     }
   })
 
-  # Build the SQL query dynamically
-  base_query <- "SELECT * FROM catch_full"
+  # Determine which view to query based on the 'zeroes' parameter
+  view_name <- if (zeroes) "vw_catch_full" else "vw_catch_positive"
+  base_query <- paste("SELECT * FROM", view_name)
   where_clauses <- c()
 
   add_filter <- function(clause) {
