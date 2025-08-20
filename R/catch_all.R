@@ -209,7 +209,6 @@ afsc_catch <- afsc_catch %>%
 
 pbs_catch <- pbs_catch %>%
   left_join(haul %>% select(event_id, survey_id), by = "event_id") %>%
-  drop_na(survey_id) %>%
   select(
     event_id,
     survey_id,
