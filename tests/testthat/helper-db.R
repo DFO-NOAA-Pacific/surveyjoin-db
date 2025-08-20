@@ -1,7 +1,8 @@
 library(DBI)
 library(RPostgres)
 library(withr)
-readRenviron(".Renviron")
+
+suppressWarnings(readRenviron(".Renviron"))
 
 # connect to db
 con <- dbConnect(

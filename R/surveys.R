@@ -1,6 +1,13 @@
 library(dplyr)
 
-haul <- readRDS("data/haul_data.rds")
+haul <- list(
+  readRDS("data/pbs_haul.rds"),
+  readRDS("data/nwfsc_haul.rds"),
+  readRDS("data/afsc_haul.rds")
+) %>%
+  bind_rows()
+
+saveRDS(haul, "data/haul_data.rds")
 
 haul <- dplyr::select(
   haul,
