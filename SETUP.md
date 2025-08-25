@@ -96,7 +96,7 @@ The script will:
 1. Reload your `.Renviron` to ensure latest credentials are used.
 2. Create the database named surveyjoin (or whatever you set DB_NAME to) if it does not already exist.
 3. Connect to that database.
-4. Create tables (`survey`, `species`, `haul`, `catch`) if missing.
+4. Create tables (`survey`, `species`, `haul`, `catch`, `specimen`) if missing.
 5. Load data from `.rds` files under `data/`.
 6. Create a zero-filled view of the database.
 7. Create indexes on relevant columns.
@@ -116,7 +116,8 @@ Using psql (command line):
 SELECT COUNT(*) FROM catch;
 SELECT COUNT(*) FROM haul;
 SELECT COUNT(*) FROM survey;
-SELECT COUNT(*) FROM species
+SELECT COUNT(*) FROM species;
+SELECT COUNT(*) FROM specimen;
 ```
 
 Using pgAdmin (GUI):

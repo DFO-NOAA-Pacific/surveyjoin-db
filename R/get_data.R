@@ -16,6 +16,7 @@
 #   - year
 #   - fuzzy_match (default FALSE, set TRUE for substring search on scientific and common names)
 #   - zeroes (default TRUE, to include zeroes. Set FALSE to get only positive catches)
+#   - specimen (default FALSE, set TRUE to query the specimen / biological data. Cannot be passed with zeroes)
 
 if (!require("DBI", quietly = TRUE)) install.packages("DBI")
 if (!require("RPostgres", quietly = TRUE)) install.packages("RPostgres")
@@ -55,7 +56,8 @@ get_data <- function(
     date = NULL,
     year = NULL,
     fuzzy_match = FALSE,
-    zeroes = TRUE
+    zeroes = TRUE,
+    specimen = FALSE
 ) {
   # Manage database connection
   local_con_created <- FALSE
@@ -74,8 +76,20 @@ get_data <- function(
     }
   })
 
-  # Determine which view to query based on the 'zeroes' parameter
-  view_name <- if (zeroes) "vw_catch_full" else "vw_catch_positive"
+  # specimen and zeroes can't both be used
+  if (specimen && !missing(zeroes)) {
+    stop("The 'zeroes' parameter is not applicable when specimen = TRUE.")
+  }
+
+  # Determine which view to query
+  view_name <- if (specimen) {
+    "vw_specimen"
+  } else if (zeroes) {
+    "vw_catch_full"
+  } else {
+    "vw_catch_positive"
+  }
+
   base_query <- paste("SELECT * FROM", view_name)
   where_clauses <- c()
 
