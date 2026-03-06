@@ -101,7 +101,7 @@ create_tables <- list(
       catch_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
       survey_id TEXT NOT NULL,
       event_id BIGINT NOT NULL,
-      species_id INT,
+      species_id INT NOT NULL,
       catch_numbers INT,
       catch_weight NUMERIC(8, 3),
       CONSTRAINT fk_haul
@@ -116,6 +116,25 @@ create_tables <- list(
         FOREIGN KEY (survey_id)
         REFERENCES survey (survey_id)
         ON UPDATE CASCADE
+    );",
+
+  specimen = "
+    CREATE TABLE IF NOT EXISTS specimen (
+      specimen_id BIGSERIAL PRIMARY KEY,
+      event_id BIGINT NOT NULL,
+      species_id INT NOT NULL,
+      length_cm NUMERIC(4,1),
+      weight_kg NUMERIC(6,3),
+      age SMALLINT,
+      sex TEXT CHECK (sex IN ('male','female','unknown')),
+      CONSTRAINT fk_haul
+        FOREIGN KEY (event_id)
+        REFERENCES haul (event_id),
+      CONSTRAINT fk_species
+        FOREIGN KEY (species_id)
+        REFERENCES species (species_id)
+        ON UPDATE CASCADE
+        ON DELETE SET NULL
     );"
 )
 
@@ -148,6 +167,12 @@ catch <- readRDS("data/catch_all.rds")
 catch <- as.data.frame(catch[, c("survey_id", "event_id", "species_id", "catch_numbers", "catch_weight")])
 dbWriteTable(con, "catch", catch, append = TRUE, row.names = FALSE)
 message(paste("Inserted", nrow(catch), "rows into 'catch' table."))
+
+# Insert specimen / biological data (slow)
+specimen <- readRDS("data/biol_data.rds")
+specimen <- as.data.frame(specimen[, c("event_id", "species_id", "length_cm", "weight_kg", "age", "sex")])
+dbWriteTable(con, "specimen", specimen, append = TRUE, row.names = FALSE)
+message(paste("Inserted", nrow(specimen), "rows into 'specimen' table."))
 
 # Create views
 v1 <- "
@@ -202,6 +227,34 @@ INNER JOIN
 
 dbExecute(con, v2)
 message("Created view 'vw_catch_positive'.")
+
+v3 <- "
+CREATE OR REPLACE VIEW vw_specimen AS
+SELECT
+  h.*,
+  sv.survey_name,
+  sv.region,
+  s.species_id,
+  s.itis,
+  s.common_name,
+  s.scientific_name,
+  sp.specimen_id,
+  sp.length_cm,
+  sp.weight_kg,
+  sp.age,
+  sp.sex
+FROM
+  haul h
+INNER JOIN
+  specimen sp ON h.event_id = sp.event_id
+INNER JOIN
+  species s ON sp.species_id = s.species_id
+INNER JOIN
+  survey sv ON h.survey_id = sv.survey_id;
+"
+
+dbExecute(con, v3)
+message("Created view 'vw_specimen'.")
 
 # Create indexes after data insert
 indexes <- c(
